@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>胃部超音波計算機 | Gastric Ultrasound Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F5F8F8;
+    --panel: #FFFFFF;
+    --border: #DCE6E5;
+    --teal-900: #0D3B3B;
+    --teal-700: #0F6E6A;
+    --teal-500: #17948E;
+    --teal-100: #E3F2F0;
+    --ink: #14262A;
+    --ink-soft: #52696D;
+    --amber: #C87A1E;
+    --amber-bg: #FBF1E2;
+    --red: #C24545;
+    --red-bg: #FBEBEA;
+    --green: #2E7D4F;
+    --green-bg: #EAF6EE;
+    --mono: 'IBM Plex Mono', monospace;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 90% -10%, rgba(23,148,142,0.08), transparent 45%),
+      radial-gradient(circle at -10% 110%, rgba(23,148,142,0.06), transparent 40%);
+    font-family: var(--body);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 32px 16px 60px;
+  }
+  .wrap{
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  header{
+    margin-bottom: 22px;
+  }
+  .eyebrow{
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--teal-700);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px;height:7px;
+    background: var(--teal-500);
+    border-radius:50%;
+    display:inline-block;
+  }
+  h1{
+    font-family: var(--display);
+    font-size: clamp(24px, 4vw, 32px);
+    line-height:1.2;
+    margin:0 0 6px;
+    color: var(--teal-900);
+    letter-spacing: -0.01em;
+  }
+  .subtitle{
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    line-height:1.5;
+    max-width: 56ch;
+  }
+
+  .mode-switch{
+    display:flex;
+    gap: 6px;
+    background: var(--teal-100);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 20px;
+    max-width: 460px;
+  }
+  .mode-btn{
+    flex:1;
+    border: none;
+    background: transparent;
+    padding: 9px 10px;
+    font-family: var(--body);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--teal-700);
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+  }
+  .mode-btn:hover{ background: rgba(255,255,255,0.5); }
+  .mode-btn.active{
+    background: var(--panel);
+    color: var(--teal-900);
+    box-shadow: 0 1px 3px rgba(13,59,59,0.12);
+  }
+
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(13,59,59,0.04);
+  }
+
+  .diagram-row{
+    display:flex;
+    gap: 24px;
+    align-items:center;
+    margin-bottom: 8px;
+  }
+  .diagram-box{
+    flex: 0 0 190px;
+  }
+  .diagram-caption{
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height:1.55;
+  }
+  .diagram-caption b{ color: var(--teal-900); font-weight:600; }
+
+  @media (max-width: 560px){
+    .diagram-row{ flex-direction:column; align-items:flex-start; }
+    .diagram-box{ flex: 0 0 auto; width: 150px; margin: 0 auto; }
+  }
+
+  .csa-mode-switch{
+    display:inline-flex;
+    gap: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 3px;
+    margin-bottom: 18px;
+  }
+  .csa-mode-btn{
+    border: none;
+    background: transparent;
+    padding: 7px 12px;
+    font-family: var(--body);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+    white-space: nowrap;
+  }
+  .csa-mode-btn:hover{ color: var(--teal-700); }
+  .csa-mode-btn.active{
+    background: var(--teal-100);
+    color: var(--teal-900);
+    box-shadow: inset 0 0 0 1px rgba(15,110,106,0.18);
+  }
+  @media (max-width:460px){
+    .csa-mode-switch{ display:flex; }
+    .csa-mode-btn{ flex:1; text-align:center; }
+  }
+
+  .field-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 20px;
+  }
+  @media (max-width:680px){ .field-grid{ grid-template-columns: 1fr 1fr; } }
+  @media (max-width:420px){ .field-grid{ grid-template-columns: 1fr; } }
+
+  .field label{
+    display:block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--teal-900);
+    margin-bottom: 7px;
+  }
+  .field .hint{
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    font-weight: 400;
+    display:block;
+    margin-top: 2px;
+  }
+  .input-shell{
+    position: relative;
+    display:flex;
+    align-items:center;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: #FCFDFD;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .input-shell:focus-within{
+    border-color: var(--teal-500);
+    box-shadow: 0 0 0 3px var(--teal-100);
+  }
+  .input-shell input{
+    flex:1;
+    border:none;
+    background: transparent;
+    padding: 11px 12px;
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    outline:none;
+    width: 100%;
+    min-width:0;
+  }
+  .input-shell input::placeholder{ color:#B6C4C4; font-weight:500;}
+  .unit{
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    padding-right: 12px;
+    white-space:nowrap;
+  }
+
+  .results{
+    margin-top: 24px;
+  }
+  .result-row{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width:560px){ .result-row{ grid-template-columns: 1fr; } }
+
+  .stat{
+    border: 1px solid var(--border);
+    background: var(--teal-100);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .stat .stat-label{
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--teal-700);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .stat .stat-value{
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--teal-900);
+    line-height:1.1;
+  }
+  .stat .stat-value span{
+    font-size:14px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-left: 4px;
+  }
+
+  .risk-banner{
+    border-radius: 12px;
+    padding: 16px 18px;
+    display:flex;
+    align-items:flex-start;
+    gap: 12px;
+    font-size: 13.5px;
+    line-height:1.55;
+    border: 1px solid transparent;
+  }
+  .risk-banner .tag{
+    font-family: var(--mono);
+    font-weight:700;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space:nowrap;
+    flex-shrink:0;
+    margin-top:1px;
+  }
+  .risk-empty{ background: var(--green-bg); }
+  .risk-empty .tag{ background: var(--green); color:#fff; }
+  .risk-low{ background: var(--amber-bg); }
+  .risk-low .tag{ background: var(--amber); color:#fff; }
+  .risk-high{ background: var(--red-bg); }
+  .risk-high .tag{ background: var(--red); color:#fff; }
+  .risk-banner p{ margin:0; color: var(--ink); }
+  .risk-banner .risk-title{ font-weight:600; display:block; margin-bottom:2px; color: var(--teal-900);}
+
+  .formula-note{
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.8;
+  }
+  .formula-note .fname{ color: var(--teal-700); font-weight:600;}
+
+  .placeholder-note{
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    text-align:center;
+    padding: 18px 0;
+  }
+
+  footer{
+    text-align:center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height:1.7;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Point-of-Care Gastric Ultrasound</div>
+    <h1>胃部超音波容積計算機</h1>
+    <div class="subtitle">於右側臥位 (RLD) 測量胃竇橫斷面，輸入 AP 徑與 CC 徑，並填入年齡，即時計算胃竇橫斷面積 (CSA) 與胃內容物體積 (GV)。</div>
+  </header>
+
+  <div class="mode-switch" role="tablist" aria-label="病人族群選擇">
+    <button type="button" class="mode-btn active" id="modeAdult" role="tab" aria-selected="true">成人 Adult</button>
+    <button type="button" class="mode-btn" id="modePed" role="tab" aria-selected="false">兒童 / 嬰幼兒 Pediatric</button>
+  </div>
+
+  <div class="card">
+    <div class="diagram-row">
+      <div class="diagram-box">
+        <svg viewBox="0 0 190 170" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+          <!-- 外層背景組織 -->
+          <ellipse cx="95" cy="90" rx="82" ry="62" fill="#F2F8F7"/>
+
+          <!-- 胃竇壁：外圈=漿膜層外緣 (serosa, 量測邊界)，內圈=黏膜/管腔邊界 -->
+          <ellipse cx="95" cy="90" rx="68" ry="48" fill="#CFE8E5" stroke="#0F6E6A" stroke-width="2.4"/>
+          <ellipse cx="95" cy="90" rx="46" ry="30" fill="#F7FBFA" stroke="#8FB8B5" stroke-width="1.2" stroke-dasharray="2 2"/>
+
+          <!-- AP 徑：垂直方向，外緣至外緣 -->
+          <line x1="95" y1="42" x2="95" y2="138" stroke="#0F6E6A" stroke-width="2" stroke-dasharray="4 3"/>
+          <line x1="86" y1="42" x2="104" y2="42" stroke="#0F6E6A" stroke-width="2"/>
+          <line x1="86" y1="138" x2="104" y2="138" stroke="#0F6E6A" stroke-width="2"/>
+
+          <!-- CC 徑：水平方向，外緣至外緣 -->
+          <line x1="27" y1="90" x2="163" y2="90" stroke="#C87A1E" stroke-width="2" stroke-dasharray="4 3"/>
+          <line x1="27" y1="81" x2="27" y2="99" stroke="#C87A1E" stroke-width="2"/>
+          <line x1="163" y1="81" x2="163" y2="99" stroke="#C87A1E" stroke-width="2"/>
+
+          <text x="100" y="26" font-family="IBM Plex Mono" font-size="11" font-weight="700" fill="#0F6E6A">AP 徑</text>
+          <text x="115" y="76" font-family="IBM Plex Mono" font-size="11" font-weight="700" fill="#C87A1E">CC 徑</text>
+
+          <!-- 外緣標示 -->
+          <line x1="95" y1="42" x2="132" y2="18" stroke="#52696D" stroke-width="1" stroke-dasharray="1 2"/>
+          <text x="134" y="16" font-family="Inter" font-size="9" fill="#52696D">漿膜層外緣</text>
+          <circle cx="95" cy="42" r="2.2" fill="#52696D"/>
+
+          <text x="95" y="160" text-anchor="middle" font-family="Inter" font-size="10" fill="#52696D">胃竇橫斷面 (antrum, RLD 姿勢)</text>
+        </svg>
+      </div>
+      <div class="diagram-caption">
+        <b>AP 徑</b>：胃竇前後徑，於漿膜層<b>外緣至外緣</b>量測（垂直方向，圖中綠色虛線）。<br>
+        <b>CC 徑</b>：胃竇頭尾徑，於漿膜層<b>外緣至外緣</b>量測（水平方向，圖中橘色虛線）。<br>
+        量測時應避開胃壁蠕動瞬間，取吸氣與呼氣之間、蠕動靜止時的影像，並以胃竇最外層（漿膜層）邊界為準，而非黏膜或管腔內緣。
+      </div>
+    </div>
+
+    <div class="csa-mode-switch" role="tablist" aria-label="CSA 輸入方式選擇">
+      <button type="button" class="csa-mode-btn active" id="csaModeDerive" role="tab" aria-selected="true">以 AP × CC 計算 CSA</button>
+      <button type="button" class="csa-mode-btn" id="csaModeDirect" role="tab" aria-selected="false">直接輸入 CSA</button>
+    </div>
+
+    <div class="field-grid">
+      <div class="field" id="apField">
+        <label for="ap">AP 徑
+          <span class="hint">前後徑 (cm)</span>
+        </label>
+        <div class="input-shell">
+          <input type="number" id="ap" inputmode="decimal" step="0.01" min="0" placeholder="例如 2.10">
+          <span class="unit">cm</span>
+        </div>
+      </div>
+      <div class="field" id="ccField">
+        <label for="cc">CC 徑
+          <span class="hint">頭尾徑 (cm)</span>
+        </label>
+        <div class="input-shell">
+          <input type="number" id="cc" inputmode="decimal" step="0.01" min="0" placeholder="例如 3.40">
+          <span class="unit">cm</span>
+        </div>
+      </div>
+      <div class="field" id="csaField" style="display:none;">
+        <label for="csaDirect">CSA
+          <span class="hint">胃竇橫斷面積，直接輸入</span>
+        </label>
+        <div class="input-shell">
+          <input type="number" id="csaDirect" inputmode="decimal" step="0.01" min="0" placeholder="例如 4.80">
+          <span class="unit">cm²</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="age" id="ageLabel">年齡
+          <span class="hint" id="ageHint">歲</span>
+        </label>
+        <div class="input-shell">
+          <input type="number" id="age" inputmode="numeric" step="1" min="0" placeholder="例如 45">
+          <span class="unit" id="ageUnit">歲</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="weight">體重
+          <span class="hint">選填，用於 mL/kg 分級</span>
+        </label>
+        <div class="input-shell">
+          <input type="number" id="weight" inputmode="decimal" step="0.1" min="0" placeholder="例如 65">
+          <span class="unit">kg</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="results" id="resultsArea">
+      <div class="placeholder-note">請輸入 AP 徑、CC 徑、年齡與體重以計算結果</div>
+    </div>
+  </div>
+
+  <footer>
+    公式參考 Perlas et al. 胃竇容積計算模型（適用於右側臥位量測）。本工具僅供臨床輔助參考，實際處置仍應依臨床判斷與病人整體狀況綜合評估。
+  </footer>
+</div>
+
+<script>
+  const apInput = document.getElementById('ap');
+  const ccInput = document.getElementById('cc');
+  const csaDirectInput = document.getElementById('csaDirect');
+  const ageInput = document.getElementById('age');
+  const weightInput = document.getElementById('weight');
+  const resultsArea = document.getElementById('resultsArea');
+  const modeAdultBtn = document.getElementById('modeAdult');
+  const modePedBtn = document.getElementById('modePed');
+  const ageLabel = document.getElementById('ageLabel');
+  const ageHint = document.getElementById('ageHint');
+  const ageUnit = document.getElementById('ageUnit');
+  const csaModeDeriveBtn = document.getElementById('csaModeDerive');
+  const csaModeDirectBtn = document.getElementById('csaModeDirect');
+  const apField = document.getElementById('apField');
+  const ccField = document.getElementById('ccField');
+  const csaField = document.getElementById('csaField');
+
+  let mode = 'adult'; // 'adult' | 'pediatric'
+  let csaMode = 'derive'; // 'derive' | 'direct'
+
+  function setCsaMode(newMode){
+    csaMode = newMode;
+    const isDerive = csaMode === 'derive';
+    csaModeDeriveBtn.classList.toggle('active', isDerive);
+    csaModeDeriveBtn.setAttribute('aria-selected', isDerive);
+    csaModeDirectBtn.classList.toggle('active', !isDerive);
+    csaModeDirectBtn.setAttribute('aria-selected', !isDerive);
+
+    apField.style.display = isDerive ? '' : 'none';
+    ccField.style.display = isDerive ? '' : 'none';
+    csaField.style.display = isDerive ? 'none' : '';
+    calculate();
+  }
+
+  csaModeDeriveBtn.addEventListener('click', () => setCsaMode('derive'));
+  csaModeDirectBtn.addEventListener('click', () => setCsaMode('direct'));
+
+  function setMode(newMode){
+    mode = newMode;
+    const isAdult = mode === 'adult';
+    modeAdultBtn.classList.toggle('active', isAdult);
+    modeAdultBtn.setAttribute('aria-selected', isAdult);
+    modePedBtn.classList.toggle('active', !isAdult);
+    modePedBtn.setAttribute('aria-selected', !isAdult);
+
+    ageHint.textContent = isAdult ? '歲' : '月齡 (months)';
+    ageUnit.textContent = isAdult ? '歲' : '月';
+    ageInput.placeholder = isAdult ? '例如 45' : '例如 30';
+    // preserve label text node, only hint span changes above
+    calculate();
+  }
+
+  modeAdultBtn.addEventListener('click', () => setMode('adult'));
+  modePedBtn.addEventListener('click', () => setMode('pediatric'));
+
+  function fmt(n, digits){
+    return n.toLocaleString('en-US', {minimumFractionDigits: digits, maximumFractionDigits: digits});
+  }
+
+  function classifyRisk(gv, weight){
+    const hasWeight = !isNaN(weight) && weight > 0;
+
+    if (gv <= 1.5){
+      return {
+        cls: 'risk-empty',
+        tag: '接近空腹',
+        title: '胃容積極低',
+        text: '計算所得胃容積極小，型態上多對應於空腹或僅少量清液體殘留（Grade 0 型態）。仍建議搭配定性影像（胃竇塌陷程度）綜合判讀。',
+        mlPerKg: hasWeight ? gv / weight : null
+      };
+    }
+
+    if (!hasWeight){
+      return {
+        cls: 'risk-low',
+        tag: '待輸入體重',
+        title: '需要體重才能判定 1.5 mL/kg 風險分級',
+        text: '目前僅能顯示胃內容物總量。請輸入體重，系統會自動換算為 mL/kg，並依 1.5 mL/kg 門檻判斷是否為「高風險（類飽胃）」狀態。',
+        mlPerKg: null
+      };
+    }
+
+    const mlPerKg = gv / weight;
+    if (mlPerKg <= 1.5){
+      return {
+        cls: 'risk-low',
+        tag: '低於 1.5 mL/kg',
+        title: '容積在正常範圍內',
+        text: `換算後為 ${fmt(mlPerKg,2)} mL/kg，未超過 1.5 mL/kg 門檻，型態上較不對應「類飽胃」狀態，惟仍建議對照定性分級（Grade 0 / 1）綜合判讀。`,
+        mlPerKg
+      };
+    } else {
+      return {
+        cls: 'risk-high',
+        tag: '超過 1.5 mL/kg',
+        title: '高風險：類飽胃狀態',
+        text: `換算後為 ${fmt(mlPerKg,2)} mL/kg，超過 1.5 mL/kg 門檻，型態上對應「類飽胃（high-risk / full stomach）」，建議評估延遲麻醉誘導、快速誘導插管（RSI）或加強吸入性防護。`,
+        mlPerKg
+      };
+    }
+  }
+
+  function calculate(){
+    const isDerive = csaMode === 'derive';
+    const ap = parseFloat(apInput.value);
+    const cc = parseFloat(ccInput.value);
+    const csaDirect = parseFloat(csaDirectInput.value);
+    const age = parseFloat(ageInput.value);
+    const weight = parseFloat(weightInput.value);
+    const isAdult = mode === 'adult';
+
+    let promptText;
+    if (isDerive){
+      promptText = isAdult
+        ? '請輸入 AP 徑、CC 徑與年齡以計算結果'
+        : '請輸入 AP 徑、CC 徑與月齡以計算結果';
+    } else {
+      promptText = isAdult
+        ? '請輸入 CSA 與年齡以計算結果'
+        : '請輸入 CSA 與月齡以計算結果';
+    }
+
+    let csa;
+    if (isDerive){
+      if (isNaN(ap) || isNaN(cc) || ap <= 0 || cc <= 0){
+        resultsArea.innerHTML = `<div class="placeholder-note">${promptText}</div>`;
+        return;
+      }
+      csa = (Math.PI / 4) * ap * cc;
+    } else {
+      if (isNaN(csaDirect) || csaDirect <= 0){
+        resultsArea.innerHTML = `<div class="placeholder-note">${promptText}</div>`;
+        return;
+      }
+      csa = csaDirect;
+    }
+
+    if (isNaN(age) || age < 0){
+      resultsArea.innerHTML = `<div class="placeholder-note">${promptText}</div>`;
+      return;
+    }
+
+    let gv, formulaLine;
+
+    if (isAdult){
+      gv = 27.0 + 14.6 * csa - 1.28 * age;
+      formulaLine = `27.0 + 14.6 × ${fmt(csa,2)} − 1.28 × ${fmt(age,0)} = ${fmt(gv,1)} mL`;
+    } else {
+      gv = -7.8 + 3.5 * csa + 0.127 * age;
+      formulaLine = `-7.8 + 3.5 × ${fmt(csa,2)} + 0.127 × ${fmt(age,0)} = ${fmt(gv,1)} mL`;
+    }
+
+    const gvDisplay = Math.max(gv, 0);
+    const risk = classifyRisk(gvDisplay, weight);
+    const gvFormulaName = isAdult
+      ? 'GV = 27.0 + 14.6 × CSA − 1.28 × 年齡(歲)'
+      : 'GV = -7.8 + 3.5 × CSA + 0.127 × 月齡';
+
+    const mlPerKgCard = risk.mlPerKg !== null
+      ? `<div class="stat">
+          <div class="stat-label">體重校正容積 mL/kg</div>
+          <div class="stat-value">${fmt(risk.mlPerKg, 2)}<span>mL/kg</span></div>
+        </div>`
+      : `<div class="stat">
+          <div class="stat-label">體重校正容積 mL/kg</div>
+          <div class="stat-value" style="font-size:15px; color:var(--ink-soft); font-weight:600;">請輸入體重</div>
+        </div>`;
+
+    const csaFormulaLine = isDerive
+      ? `<div><span class="fname">CSA</span> = (π/4) × AP × CC = (π/4) × ${fmt(ap,2)} × ${fmt(cc,2)} = ${fmt(csa,2)} cm²</div>`
+      : `<div><span class="fname">CSA</span> = ${fmt(csa,2)} cm² (直接輸入)</div>`;
+
+    resultsArea.innerHTML = `
+      <div class="result-row">
+        <div class="stat">
+          <div class="stat-label">胃竇橫斷面積 CSA</div>
+          <div class="stat-value">${fmt(csa, 2)}<span>cm²</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">胃內容物體積 GV</div>
+          <div class="stat-value">${fmt(gvDisplay, 1)}<span>mL</span></div>
+        </div>
+      </div>
+      <div class="result-row">
+        ${mlPerKgCard}
+      </div>
+      <div class="risk-banner ${risk.cls}">
+        <span class="tag">${risk.tag}</span>
+        <p><span class="risk-title">${risk.title}</span>${risk.text}</p>
+      </div>
+      <div class="formula-note">
+        ${csaFormulaLine}
+        <div><span class="fname">${gvFormulaName}</span></div>
+        <div>&nbsp;&nbsp;= ${formulaLine}</div>
+        ${risk.mlPerKg !== null ? `<div><span class="fname">mL/kg</span> = GV ÷ 體重 = ${fmt(gvDisplay,1)} ÷ ${fmt(weight,1)} = ${fmt(risk.mlPerKg,2)} mL/kg</div>` : ''}
+      </div>
+    `;
+  }
+
+  [apInput, ccInput, csaDirectInput, ageInput, weightInput].forEach(el => {
+    el.addEventListener('input', calculate);
+  });
+</script>
+</body>
+</html>
